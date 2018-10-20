@@ -7,7 +7,7 @@ contract GerenciaApolices{
     mapping(uint => address) public apolicesEnd;
     mapping(string => uint) parametros;
     mapping(string => uint) diasSeca;
-    
+
     struct Dados {
         address end;
         uint numero;
@@ -19,7 +19,7 @@ contract GerenciaApolices{
     function criarApolice(string _nome, string _id, string _ramo, string _estado, string _municipio, uint _parametro,
             uint _area, uint _custoHect, uint _premio) public {
         uint num = geraNumApolice(111111111111111, 999999999999999);
-        
+
         address novaApolice = new Apolice(num, _nome, _id, _ramo , _estado, _municipio, _parametro, _area, _custoHect, _premio);
         Dados memory info = Dados(novaApolice, num, _id, _estado, now);
         dadosApolices.push(info);
@@ -27,16 +27,20 @@ contract GerenciaApolices{
         apolicesEnd[num] = novaApolice;
         qtdApolices += 1;
     }
-    
+
     function geraNumApolice(uint min, uint max) public view returns (uint){
         return uint(sha3(qtdApolices + 1))%(min+max)-min;
     }
-    
+
     function atualizaParametro(string municipio, uint valorAtualParametro, uint _diasSeca) public {
         parametros[municipio] = valorAtualParametro;
         diasSeca[municipio] = _diasSeca;
     }
-    
+
+    function obtemDadosParametro(string municipio) public view returns (uint, uint){
+        return (parametros[municipio], diasSeca[municipio]);
+    }
+
     function obtemApolices() public view returns(address[]) {
         return apolices;
     }
@@ -54,16 +58,17 @@ contract Apolice{
     uint area;           // Em hectares
     uint custoHect;      // Custo por hectare
     uint dataProposta;   // Data da criação
-    uint dataIniVigencia; 
+    uint dataIniVigencia;
     uint dataFimVigencia;
     uint premio;
     uint indenizacao;
     bool public liquidado;
     bool public ocorreuSinistro;
     bool public emDia;
+    bool public contratada;
 
 
-    constructor(uint _num, string _nome, string _id, string _ramo, string _estado, string _municipio, 
+    constructor(uint _num, string _nome, string _id, string _ramo, string _estado, string _municipio,
                 uint _parametro, uint _area, uint _custoHect, uint _premio) public {
         numero = _num;
         nome = _nome;
@@ -77,20 +82,22 @@ contract Apolice{
         dataProposta = now;
         premio = _premio;
     }
-    
-    function obtemDados() public view returns(uint, string, string, string, string, 
+
+    function obtemDados() public view returns(uint, string, string, string, string,
                                     string, uint, uint, uint, uint ){
             return (numero, id, nome, ramo, estado, municipio, parametro, area, custoHect, premio);
     }
-    
+
     function obtemDatas() public view returns (uint, uint, uint){
         return (dataProposta, dataIniVigencia, dataFimVigencia);
     }
-    
+
     function aceitaProposta() public {
         dataIniVigencia = now;
         dataFimVigencia = dataIniVigencia + 356 days;
         emDia = true;
+        contratada = true;
+
     }
 
     function atualizaStatusPagamento() public {
@@ -105,7 +112,33 @@ contract Apolice{
      function atualizaIndenizacao(uint valor) public {
          indenizacao = valor;
     }
-    
+
+    function atualizaDados(string _ramo, string _estado, string _municipio, uint _parametro, uint _area,
+                            uint _custoHect, uint _premio) public {
+
+         if(keccak256(abi.encodePacked(ramo)) != keccak256(abi.encodePacked(_ramo))){
+             ramo = _ramo;
+         }
+         if(keccak256(abi.encodePacked(estado)) != keccak256(abi.encodePacked(_estado))){
+             estado = _estado;
+         }
+         if(keccak256(abi.encodePacked(municipio)) != keccak256(abi.encodePacked(_municipio))){
+             municipio = _municipio;
+         }
+         if(parametro != _parametro){
+             parametro = _parametro;
+         }
+         if(area != _area){
+             area = _area;
+         }
+         if(custoHect != _custoHect){
+             custoHect = _custoHect;
+         }
+         if(premio != _premio){
+             premio = _premio;
+         }
+    }
+
     function verificaEstaDentroVigencia() public view returns(bool) {
         return (dataFimVigencia >= now);
     }

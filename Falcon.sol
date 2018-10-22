@@ -144,6 +144,8 @@ contract Apolice{
     }
 
     function verificaSinistro(uint valorAtualParametro, uint diasSeca) public {
+        require(dataFimVigencia >= now, "Não está dentro da vigência!");
+        require(emDia, "O pagamento não está em dia");
         require(!liquidado, "Essa apólice já foi liquidada!");
         if(diasSeca > 60 && valorAtualParametro < parametro){
             ocorreuSinistro = true;

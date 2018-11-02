@@ -83,6 +83,8 @@ contract Apolice{
         premio = _premio;
     }
 
+    event NotificaSeguradoraSinistro(uint numeroApolice);
+
     function obtemDados() public view returns(uint, string, string, string, string,
                                     string, uint, uint, uint, uint ){
             return (numero, id, nome, ramo, estado, municipio, parametro, area, custoHect, premio);
@@ -149,6 +151,7 @@ contract Apolice{
         require(!liquidado, "Essa apólice já foi liquidada!");
         if(diasSeca > 60 && valorAtualParametro < parametro){
             ocorreuSinistro = true;
+            emit NotificaSeguradoraSinistro(numero);
         }
     }
 
